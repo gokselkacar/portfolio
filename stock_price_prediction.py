@@ -1,0 +1,379 @@
+# Required libraries:
+# pip install pandas yfinance scikit-learn matplotlib seaborn numpy pytest
+
+import pandas as pd
+import yfinance as yf
+import numpy as np
+from sklearn.ensemble import RandomForestRegressor
+import datetime # Needed for formatting date output and timedelta
+import matplotlib.pyplot as plt # For graphical plotting
+import matplotlib.dates as mdates # For formatting dates on plot axis
+import seaborn as sns # For plot styling
+import traceback # For detailed error printing
+
+# --- Function Definitions ---
+
+def fetch_stock_data(stock_symbol, period='5y'):
+    """
+    Fetches historical stock data for the given stock symbol using yfinance.
+    Includes robust handling for 'Close' column extraction.
+    """
+    print(f"\nFetching data for {stock_symbol} (period: {period})...")
+    try:
+        data = yf.download(stock_symbol, period=period, progress=True)
+        if data.empty:
+            print(f"Error: No data found for stock symbol '{stock_symbol}'. Is the ticker correct?")
+            return None
+
+        close_col_data = None
+        if 'Close' in data.columns: close_col_data = data['Close']
+        elif isinstance(data.columns, pd.MultiIndex):
+            if ('Close', '') in data.columns: close_col_data = data[('Close', '')]
+            elif 'Close' in data.columns.get_level_values(0):
+                 close_col_data = data['Close']
+                 if isinstance(close_col_data, pd.DataFrame) and '' in close_col_data.columns:
+                     close_col_data = close_col_data['']
+
+        if close_col_data is None:
+             print(f"Error: Could not reliably extract 'Close' column data for {stock_symbol}.")
+             return None
+
+        close_values = np.array(close_col_data)
+        close_values_1d = np.squeeze(close_values)
+
+        if close_values_1d.ndim != 1:
+            print(f"Error: 'Close' data for {stock_symbol} could not be forced into 1-dimension. Original shape: {close_values.shape}")
+            return None
+
+        result_df = pd.DataFrame({'Date': data.index, 'Close': close_values_1d})
+        result_df['Close'] = pd.to_numeric(result_df['Close'], errors='coerce')
+        result_df = result_df.dropna(subset=['Close'])
+
+        if result_df.empty:
+             print(f"Error: No valid numeric 'Close' price data found after cleaning for {stock_symbol}.")
+             return None
+
+        result_df = result_df.reset_index(drop=True)
+        result_df['Date'] = data.index[:len(result_df)].copy()
+        return result_df
+
+    except Exception as e:
+        print(f"An error occurred during data fetch or processing for {stock_symbol}: {e}")
+
+        return None
+
+
+def add_features(data):
+    """
+    Adds adaptive technical indicators to the dataset.
+    """
+    if data is None or data.empty or 'Close' not in data.columns:
+         print("Error in add_features: Invalid or empty input DataFrame.")
+         return None
+
+    data = data.copy()
+    data['Close'] = pd.to_numeric(data['Close'], errors='coerce')
+    data = data.dropna(subset=['Close'])
+    if data.empty:
+         print("Error in add_features: No valid numeric 'Close' data after coercion.")
+         return None
+
+    data['DayIndex'] = np.arange(len(data))
+    N = len(data)
+
+    if N >= 500: short_window, long_window, vol_window = 50, 200, 20
+    elif N >= 100: short_window, long_window, vol_window = max(5, int(0.1*N)), max(10, int(0.3*N)), max(5, int(0.05*N))
+    else:
+         short_window, long_window, vol_window = max(2, int(0.1*N)), max(3, int(0.3*N)), max(2, int(0.05*N))
+         min_required = max(short_window, long_window, vol_window)
+         if N < min_required:
+             print(f"Warning in add_features: Data length {N} too small for calculated windows (min required: {min_required}).")
+             return None
+
+    print(f"Using windows - Short MA: {short_window}, Long MA: {long_window}, Volatility: {vol_window}")
+
+    data['MA_short'] = data['Close'].rolling(window=short_window, min_periods=1).mean()
+    data['MA_long'] = data['Close'].rolling(window=long_window, min_periods=1).mean()
+    data['Volatility'] = data['Close'].rolling(window=vol_window, min_periods=1).std().fillna(0)
+    data['Return'] = data['Close'].pct_change().fillna(0).replace([np.inf, -np.inf], 0)
+
+    close_series = data['Close']
+    if isinstance(close_series, pd.DataFrame): close_series = close_series.iloc[:, 0] if not close_series.empty else pd.Series(dtype=float)
+    ma_short_series = data['MA_short']
+    if isinstance(ma_short_series, pd.DataFrame): ma_short_series = ma_short_series.iloc[:, 0] if not ma_short_series.empty else pd.Series(dtype=float)
+    data['Diff_MA'] = close_series - ma_short_series
+
+    essential_model_cols = ['Close', 'DayIndex', 'MA_short', 'MA_long', 'Volatility', 'Return', 'Diff_MA']
+    data_len_before_drop = len(data)
+    data = data.dropna(subset=essential_model_cols)
+    data_len_after_drop = len(data)
+    if data_len_before_drop > data_len_after_drop:
+        print(f"Dropped {data_len_before_drop - data_len_after_drop} initial rows with NaN feature values.")
+
+    if data.empty:
+        print("Error in add_features: No data remaining after feature calculation and NaN removal.")
+        return None
+
+    return data
+
+
+def prepare_features(data):
+    """
+    Prepares the feature matrix and target vector.
+    """
+    if data is None or data.empty: return None, None, None
+    feature_names = ['DayIndex', 'MA_short', 'MA_long', 'Volatility', 'Return', 'Diff_MA']
+    missing_features = [f for f in feature_names if f not in data.columns]
+    if missing_features: print(f"Error: Missing feature columns: {missing_features}"); return None, None, None
+    if 'Close' not in data.columns: print("Error: Missing target column 'Close'."); return None, None, None
+
+    features = data[feature_names].copy()
+    target = data['Close'].copy()
+    if features.empty or target.empty: return None, None, None
+
+    return features, target, feature_names
+
+
+def train_model(X, y):
+    """
+    Trains a Random Forest regressor model.
+    """
+    if X is None or y is None or X.empty or y.empty: return None
+    if len(X) != len(y): print(f"Error: Mismatch length X({len(X)}) vs y({len(y)})."); return None
+
+    try:
+        print(f"\nTraining RandomForestRegressor on {len(X)} samples...")
+        model = RandomForestRegressor(n_estimators=200, max_depth=15, min_samples_split=10, min_samples_leaf=5, random_state=42, n_jobs=-1)
+        model.fit(X, y)
+        print("Model training complete.")
+        return model
+    except Exception as e:
+        print(f"Error during model training: {e}")
+        return None
+
+
+def predict_future_prices(model, data_with_features, feature_names, future_days=30):
+    """
+    Predicts future stock prices using iterative forecasting.
+    Passes DataFrame with feature names to predict to avoid warnings.
+    """
+    if model is None: print("Error: Model not trained."); return None
+    if data_with_features is None or data_with_features.empty: print("Error: Input data empty."); return None
+    if not all(f in data_with_features.columns for f in feature_names):
+         missing = [f for f in feature_names if f not in data_with_features.columns]
+         print(f"Error: Missing features in input data. Required: {feature_names}. Missing: {missing}"); return None
+
+    print(f"Starting iterative prediction for {future_days} days...")
+    predictions = []
+    current_data = data_with_features.copy().reset_index(drop=True)
+
+    for i in range(future_days):
+        last_row = current_data.iloc[-1]
+        last_day_index = last_row['DayIndex']
+        last_close = last_row['Close']
+        next_day_index = last_day_index + 1
+
+        next_row_placeholder = pd.DataFrame([{'Close': last_close}], index=[len(current_data)])
+        temp_df = pd.concat([current_data, next_row_placeholder], ignore_index=True)
+        N_temp = len(temp_df)
+
+        if N_temp >= 500: short_window, long_window, vol_window = 50, 200, 20
+        elif N_temp >= 100: short_window, long_window, vol_window = max(5, int(0.1*N_temp)), max(10, int(0.3*N_temp)), max(5, int(0.05*N_temp))
+        else: short_window, long_window, vol_window = max(2, int(0.1*N_temp)), max(3, int(0.3*N_temp)), max(2, int(0.05*N_temp))
+
+        temp_df['MA_short'] = temp_df['Close'].rolling(window=short_window, min_periods=1).mean()
+        temp_df['MA_long'] = temp_df['Close'].rolling(window=long_window, min_periods=1).mean()
+        temp_df['Volatility'] = temp_df['Close'].rolling(window=vol_window, min_periods=1).std().fillna(0)
+        temp_df['Return'] = temp_df['Close'].pct_change().fillna(0).replace([np.inf, -np.inf], 0)
+        temp_close_series = temp_df['Close']
+        if isinstance(temp_close_series, pd.DataFrame): temp_close_series = temp_close_series.iloc[:, 0]
+        temp_ma_short_series = temp_df['MA_short']
+        if isinstance(temp_ma_short_series, pd.DataFrame): temp_ma_short_series = temp_ma_short_series.iloc[:, 0]
+        temp_df['Diff_MA'] = temp_close_series - temp_ma_short_series
+
+        candidate_features_series = temp_df.iloc[-1][feature_names]
+        candidate_features_series['DayIndex'] = next_day_index
+
+        if candidate_features_series.isnull().any():
+            print(f"\nWarning: NaN values detected for prediction day {i+1}. Using last prediction.")
+            if predictions: predictions.append(predictions[-1])
+            else: print("Error: Cannot make initial prediction due to NaN."); return None
+            continue
+
+        predict_df = pd.DataFrame([candidate_features_series.to_dict()])
+        predict_df = predict_df[feature_names]
+
+        predicted_price = model.predict(predict_df)[0]
+        predictions.append(predicted_price)
+
+        new_row_data = candidate_features_series.to_dict()
+        new_row_data['Close'] = predicted_price
+        new_row_df = pd.DataFrame([new_row_data])
+        current_data = pd.concat([current_data, new_row_df], ignore_index=True)
+
+    print("Iterative prediction complete.")
+    return predictions
+
+
+# --- NEW PLOTTING FUNCTION ---
+def save_plot_image(ticker, historical_data, predicted_prices, future_dates):
+    """
+    Plots historical closing prices and predicted future prices using matplotlib/seaborn.
+    Saves the plot to a PNG file.
+    """
+    # Ensure 'Date' column exists and is datetime in historical_data for plotting
+    if 'Date' not in historical_data.columns:
+         print("Error plotting: Historical data missing 'Date' column.")
+         return
+    # Make a copy to avoid modifying original data
+    plot_data = historical_data.copy()
+    plot_data['Date'] = pd.to_datetime(plot_data['Date'])
+
+    # Check predictions and dates validity
+    valid_predictions = (predicted_prices is not None and hasattr(predicted_prices, '__len__') and len(predicted_prices) > 0)
+    valid_dates = (future_dates is not None and hasattr(future_dates, '__len__') and len(future_dates) == len(predicted_prices if valid_predictions else []))
+
+    if not valid_predictions or not valid_dates:
+        print("\nWarning: Prediction data or dates invalid/missing. Plotting historical data only.")
+        predicted_prices = []
+        future_dates = []
+
+    try:
+        sns.set_theme(style="darkgrid") # Apply Seaborn styling
+        plt.figure(figsize=(15, 8)) # Create Matplotlib figure
+
+        # Plot historical data (e.g., last N days for context)
+        plot_history_days = 90
+        start_index = max(0, len(plot_data) - plot_history_days)
+        history_to_plot = plot_data.iloc[start_index:]
+
+        # Plot historical closing prices
+        plt.plot(history_to_plot['Date'], history_to_plot['Close'], label='Historical Close Price', color='dodgerblue', linewidth=2, marker='.', markersize=5)
+
+        # Plot predicted data if available
+        if future_dates and predicted_prices:
+            prediction_dates_dt = [pd.to_datetime(d) for d in future_dates]
+            # Connect last historical point to first prediction for continuity
+            last_hist_date = history_to_plot['Date'].iloc[-1]
+            last_hist_close = history_to_plot['Close'].iloc[-1]
+            plot_pred_dates = [last_hist_date] + prediction_dates_dt
+            plot_pred_values = [last_hist_close] + list(predicted_prices)
+
+            plt.plot(plot_pred_dates, plot_pred_values, label=f'Predicted Price ({len(predicted_prices)} days)', color='orangered', marker='.', markersize=5, linestyle='--', linewidth=2)
+
+        # Formatting the plot
+        plt.title(f'{ticker.upper()} Stock Price History & Forecast', fontsize=16)
+        plt.xlabel('Date', fontsize=12)
+        plt.ylabel('Price ($)', fontsize=12)
+        plt.legend(fontsize=10)
+        plt.grid(True, linestyle=':', alpha=0.7) # Customize grid
+
+        # Improve date formatting on x-axis
+        plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
+        plt.gca().xaxis.set_major_locator(mdates.AutoDateLocator(minticks=6, maxticks=12))
+        plt.xticks(rotation=30, ha='right') # Rotate dates slightly
+
+        plt.tight_layout() # Adjust layout
+
+        # Save plot to file instead of showing
+        plot_filename = f"{ticker.upper()}_prediction_plot.png"
+        plt.savefig(plot_filename, dpi=150) # Save with decent resolution
+        plt.close() # Close the plot figure to free memory
+        print(f"\nColorful plot saved successfully as {plot_filename}")
+
+    except Exception as e:
+        print(f"An error occurred during plotting: {e}")
+        # traceback.print_exc()
+
+
+def main():
+    """
+    Main function to run the stock price prediction tool.
+    """
+    print("=== Stock Price Prediction Tool ===\n")
+    stock_symbol = input("Enter the stock symbol (e.g., AAPL, GOOGL, NVDA): ").strip().upper()
+    if not stock_symbol: print("No stock symbol provided. Exiting."); return
+    period = input("Enter the period for historical data (default '5y'): ").strip() or '5y'
+
+    # fetch_stock_data now returns 'Date' column if successful
+    data = fetch_stock_data(stock_symbol, period=period)
+    if data is None: print("Exiting due to data fetch error."); return
+    print(f"\nFetched {len(data)} historical data points for {stock_symbol}.")
+
+    # Display last 5 days using the 'Date' column
+    if 'Date' in data.columns and len(data) >= 5:
+        print("\n--- Last 5 Actual Trading Days ---")
+        last_5_days = data[['Date', 'Close']].tail(5).copy()
+        # Ensure Date is datetime before formatting
+        last_5_days['Date'] = pd.to_datetime(last_5_days['Date']).dt.strftime('%Y-%m-%d')
+        print(last_5_days.to_string(index=False))
+        print("-" * 30)
+    # ... (rest of the checks for last 5 days)
+
+    data_with_features = add_features(data)
+    if data_with_features is None: print("Failed to add features. Exiting."); return
+
+    X, y, feature_names = prepare_features(data_with_features)
+    if X is None or y is None or feature_names is None: print("Failed to prepare features/target. Exiting."); return
+
+    model = train_model(X, y)
+    if model is None: print("Model training failed. Exiting."); return
+
+    future_days = 0
+    while True:
+        try:
+            future_days_input = input(f"\nEnter the number of *trading* days into the future to predict for {stock_symbol} (e.g., 30): ").strip()
+            if not future_days_input: print("No number entered."); continue
+            future_days = int(future_days_input)
+            if future_days < 0: print("Please enter a non-negative integer."); continue
+            break
+        except ValueError: print("Invalid input. Please enter an integer.")
+        except Exception as e: print(f"An unexpected error occurred: {e}"); return
+
+    predictions = []
+    display_dates = []
+    # Use original 'data' df for date generation as it reliably has 'Date'
+    base_data_for_dates = data
+
+    if future_days > 0:
+        predictions = predict_future_prices(model, data_with_features, feature_names, future_days=future_days)
+        if predictions is None: predictions = []
+        else:
+             # Generate display dates using the original 'data' DataFrame
+             if 'Date' in base_data_for_dates.columns and not base_data_for_dates.empty:
+                 try:
+                     base_data_for_dates['Date'] = pd.to_datetime(base_data_for_dates['Date']) # Ensure datetime
+                     last_actual_date = base_data_for_dates['Date'].iloc[-1]
+                     current_display_date = last_actual_date
+                     while len(display_dates) < future_days:
+                         current_display_date += datetime.timedelta(days=1)
+                         if current_display_date.weekday() < 5: display_dates.append(current_display_date.date())
+                 except Exception as date_err: print(f"Warning: Error generating display dates: {date_err}"); display_dates = []
+             else: print("Warning: Cannot generate display dates as 'Date' column missing from initial data.")
+
+
+    if predictions:
+        final_predicted_price = predictions[-1]
+        print("-" * 30)
+        print(f"\nFinal predicted price for {stock_symbol} after {future_days} trading day(s): ${final_predicted_price:.2f}")
+        print("-" * 30)
+        print("\n--- Forecasted Prices (Day-by-Day) ---")
+        for i, price in enumerate(predictions):
+            if i < len(display_dates): print(f"  {display_dates[i]}: ${price:.2f}")
+            else: print(f"  Day {i+1}: ${price:.2f}")
+        print("-" * 30)
+    elif future_days > 0: print("\nPrediction could not be generated.")
+    else: print("\nNo forecast requested (0 days).")
+
+    # --- Step 9: Save Graphical Plot ---
+    # Pass original 'data' (has Date), predictions, and display_dates
+    # It will plot history even if predictions failed/weren't requested
+    save_plot_image(stock_symbol, data, predictions if predictions else [], display_dates if display_dates else [])
+
+
+    # --- Final Disclaimer ---
+    print("\nDisclaimer: Stock price prediction is highly speculative.")
+    print("This model is for educational purposes and is NOT financial advice.")
+
+if __name__ == "__main__":
+    main()
