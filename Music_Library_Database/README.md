@@ -1,210 +1,269 @@
-# CS50’s Databases with SQL Final Project
+# MelodyBase
 
-In my final project, I focused on building a Music Library Database.  This project allowed me to put my knowledge of SQL into practice by designing an efficient, well-structured database, implementing complex queries, and ensuring that the system was capable of handling real-world data and use cases.
+## A comprehensive SQL database system for music collection management
 
-This Music Library Database provides an efficient way for users to manage and organize their music collections. While it’s not a full-fledged music streaming platform, it gives users control over their music library, allowing them to track their favourite songs, create playlists, and view detailed song information.
+---
 
-## Scope
+## 🎵 Overview
 
-The purpose of this database is to manage and organize a personal music library similar to Spotify or Apple Music. It allows users to track their favourite songs, create playlists, and manage their music collection effectively.
+MelodyBase is a robust SQL database system designed to manage and organize music collections with efficiency and precision. This project implements a sophisticated database architecture that allows users to catalog songs, artists, albums, and playlists while maintaining complex relationships between these entities.
 
-**Included in scope:**
+Built with SQLite and employing advanced database concepts, MelodyBase demonstrates the practical application of relational database design in handling real-world data scenarios. While not intended as a streaming platform, it provides the essential backend infrastructure for comprehensive music library management.
 
-- Songs and their metadata (title, duration, release date)
-- Artists and their information
-- Albums and their details
-- Playlists and user-created collections
-- User listening history
-- Genre classifications
-- User ratings and favourites
+---
 
-**Outside of scope:**
+## ✨ Key Features
 
-- Music streaming functionality
-- Audio file storage
-- Payment processing
-- Social networking features
-- Lyrics storage
-- Artist royalty tracking
-- Regional availability rights
-- Podcast content
+- **Complete Music Metadata Management**
+  - Comprehensive song, artist, and album cataloging
+  - Detailed tracking of release dates, durations, and genres
+  - Support for explicit content flagging
 
-## Functional Requirements
+- **User-Centric Design**
+  - Personal account management
+  - Favorites and ratings system
+  - Listening history tracking
+  - Privacy controls
 
-**Users should be able to:**
+- **Playlist Functionality**
+  - Custom playlist creation and management
+  - Flexible song organization
+  - Position tracking within playlists
+  - Public/private visibility settings
 
-- Add, update, and delete songs from their library
-- Create, modify, and delete playlists
-- Add and remove songs from playlists
-- Rate songs and mark favourites
-- View their listening history
-- Search for songs, artists, and albums
-- Filter songs by various criteria (genre, artist, album, etc.)
-- View detailed information about songs, artists, and albums
+- **Advanced Categorization**
+  - Multi-genre classification
+  - Artist collaboration tracking
+  - Album type differentiation (LP, EP, Single, Compilation)
 
-**Beyond scope:**
+---
 
-- Stream or download music
-- Share playlists with other users
-- Follow other users
-- Purchase music
-- Upload custom audio files
-- Modify song metadata globally
-- Create artist profiles
-- Generate music recommendations
+## 📊 Database Schema
 
-## Representation
+### Core Entities
 
-Entities are captured in SQLite tables with the following schema.
-
-### Entities
-
-The database includes the following entities:
-
-#### Users
-
-The `users` table includes:
-
-* `user_id`, which specifies the unique ID for the user as an `INTEGER`. This column thus has the `PRIMARY KEY` constraint applied, automatically aliasing to ROWID for auto-incrementing behavior.
-* `username`, which specifies the user's display name as `TEXT`. This column has both `NOT NULL` and `UNIQUE` constraints to ensure each user has a distinct username.
-* `email`, which stores the user's email address as `TEXT`. This column has both `NOT NULL` and `UNIQUE` constraints as each user must have a unique email address.
-* `password_hash`, which stores the hashed password as `TEXT`. This column has both `NOT NULL` and `UNIQUE` constraints as each user must have a unique password.
-* `first_name`, which stores the user's first name as `TEXT`. This column has both `NOT NULL` and `UNIQUE` constraints to ensure each user has a distinct first name.
-* `last_name`, which stores the user's last name as `TEXT`. This column has both `NOT NULL` and `UNIQUE` constraints to ensure each user has a distinct last name.
-* `created_at`, which specifies when the user account was created as `DATETIME`. The default value is the current timestamp, as denoted by `DEFAULT CURRENT_TIMESTAMP`.
-* `last_login`, which stores the timestamp of the user's most recent login as `DATETIME`. This column can be NULL as it will be updated after the user's first login.
-
-#### Songs
-
-The `songs` table includes:
-
-* `song_id`, which specifies the unique ID for the song as an `INTEGER`. This column thus has the `PRIMARY KEY` constraint applied.
-* `title`, which stores the song's title as `TEXT`. This column has the `NOT NULL` constraint as every song must have a title.
-* `duration_seconds`, which stores the length of the song in seconds as an `INTEGER`. This column has the `NOT NULL` constraint and a `CHECK` constraint to ensure the duration is greater than 0.
-* `release_date`, which stores the song's original release date as `DATE`.
-* `album_id`, which is an `INTEGER` referencing the `id` column in the `albums` table. This column has a `FOREIGN KEY` constraint to maintain referential integrity.
-* `explicit`, which indicates whether the song contains explicit content as `BOOLEAN`. This defaults to FALSE.
-
-#### Artists
-
-The `artists` table includes:
-
-* `artist_id`, which specifies the unique ID for the artist as an `INTEGER`. This column thus has the `PRIMARY KEY` constraint applied.
-* `name`, which stores the artist's name as `TEXT`. This column has the `NOT NULL` constraint as every artist must have a name.
-* `bio`, which stores the artist's biography as `TEXT`. This column can be NULL as biographical information is optional.
-* `formed_date`, which stores the date when the band/artist began their career as `DATE`. This column can be NULL as this information might not be available for all artists.
-
-#### Albums
-
-The `albums` table includes:
-
-* `album_id`, which specifies the unique ID for the album as an `INTEGER`. This column thus has the `PRIMARY KEY` constraint applied.
-* `title`, which stores the album's title as `TEXT`. This column has the `NOT NULL` constraint as every album must have a title.
-* `release_date`, which stores the album's release date as `DATE`. This column has the `NOT NULL` constraint as every album must have a release date.
-* `album_type`, which specifies the type of album as `TEXT`. This column has a `CHECK` constraint to ensure the type is one of: 'LP', 'EP', 'Single', or 'Compilation'.
-* `total_tracks`, which stores the number of tracks on the album as `INTEGER`. This column has a `CHECK` constraint to ensure the value is greater than 0.
-
-#### Playlists
-
-The `playlists` table includes:
-
-* `playlist_id`, which specifies the unique ID for the playlist as an `INTEGER`. This column thus has the `PRIMARY KEY` constraint applied.
-* `user_id`, which references the creator of the playlist as an `INTEGER`. This column has both `NOT NULL` and `FOREIGN KEY` constraints, referencing the `id` column in the `users` table.
-* `name`, which stores the playlist's name as `TEXT`. This column has the `NOT NULL` constraint as every playlist must have a name.
-* `description`, which stores an optional description of the playlist as `TEXT`.
-* `created_at`, which stores the creation timestamp as `DATETIME`, defaulting to the current timestamp.
-* `is_public`, which indicates if the playlist is publicly visible as `BOOLEAN`, defaulting to TRUE.
-
-#### Genres
-
-The `genres` table includes:
-
-* `genre_id`, which specifies the unique ID for the genre as an `INTEGER`. This column thus has the `PRIMARY KEY` constraint applied.
-* `name`, which stores the genre name as `TEXT`. This column has both `NOT NULL` and `UNIQUE` constraints as each genre must have a unique name.
-* `description`, which stores an optional description of the genre as `TEXT`.
+| Entity | Description |
+|--------|-------------|
+| Users | Account details, authentication data, and user preferences |
+| Songs | Core music tracks with metadata and content flags |
+| Artists | Performers with biographical information |
+| Albums | Collections of songs with release information |
+| Playlists | User-created song collections with metadata |
+| Genres | Music classification categories |
 
 ### Junction Tables
 
-The database includes several junction tables to represent many-to-many relationships:
+| Table | Relationship |
+|-------|-------------|
+| song_artists | Maps the many-to-many relationship between songs and artists |
+| playlist_songs | Connects songs to playlists with position tracking |
+| song_genres | Associates songs with their respective genres |
+| user_songs | Tracks user favorites and ratings |
 
-##### song_artists
+---
 
-* `song_id`, which references the song as an `INTEGER` with `FOREIGN KEY` constraint.
-* `artist_id`, which references the artist as an `INTEGER` with `FOREIGN KEY` constraint.
-* The combination of `song_id` and `artist_id` forms the `PRIMARY KEY`.
+## 🔍 Entity Details
 
-##### playlist_songs
+### Users Table
 
-* `playlist_id`, which references the playlist as an `INTEGER` with `FOREIGN KEY` constraint.
-* `song_id`, which references the song as an `INTEGER` with `FOREIGN KEY` constraint.
-* `added_at`, which stores when the song was added to the playlist as `DATETIME`.
-* `position`, which stores the song's position in the playlist as `INTEGER NOT NULL`.
-* The combination of `playlist_id` and `song_id` forms the `PRIMARY KEY`.
+```sql
+CREATE TABLE users (
+    user_id INTEGER PRIMARY KEY,
+    username TEXT NOT NULL UNIQUE,
+    email TEXT NOT NULL UNIQUE,
+    password_hash TEXT NOT NULL,
+    first_name TEXT NOT NULL,
+    last_name TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    last_login DATETIME
+);
+```
 
-##### song_genres
+### Songs Table
 
-* `song_id`, which references the song as an `INTEGER` with `FOREIGN KEY` constraint.
-* `genre_id`, which references the genre as an `INTEGER` with `FOREIGN KEY` constraint.
-* The combination of `song_id` and `genre_id` forms the `PRIMARY KEY`.
+```sql
+CREATE TABLE songs (
+    song_id INTEGER PRIMARY KEY,
+    title TEXT NOT NULL,
+    duration_seconds INTEGER NOT NULL CHECK(duration_seconds > 0),
+    release_date DATE,
+    album_id INTEGER REFERENCES albums(album_id),
+    explicit BOOLEAN DEFAULT FALSE
+);
+```
 
-##### user_songs
+### Artists Table
 
-* `user_id`, which references the user as an `INTEGER` with `FOREIGN KEY` constraint.
-* `song_id`, which references the song as an `INTEGER` with `FOREIGN KEY` constraint.
-* `favorited_at`, which stores when the user favorited the song as `DATETIME`.
-* The combination of `user_id` and `song_id` forms the `PRIMARY KEY`.
+```sql
+CREATE TABLE artists (
+    artist_id INTEGER PRIMARY KEY,
+    name TEXT NOT NULL,
+    bio TEXT,
+    formed_date DATE
+);
+```
 
-### Relationships
+### Albums Table
 
-The below entity relationship diagram describes the relationships among the entities in the database.
+```sql
+CREATE TABLE albums (
+    album_id INTEGER PRIMARY KEY,
+    title TEXT NOT NULL,
+    release_date DATE NOT NULL,
+    album_type TEXT CHECK(album_type IN ('LP', 'EP', 'Single', 'Compilation')),
+    total_tracks INTEGER CHECK(total_tracks > 0)
+);
+```
+
+### Playlists Table
+
+```sql
+CREATE TABLE playlists (
+    playlist_id INTEGER PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(user_id),
+    name TEXT NOT NULL,
+    description TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    is_public BOOLEAN DEFAULT TRUE
+);
+```
+
+### Genres Table
+
+```sql
+CREATE TABLE genres (
+    genre_id INTEGER PRIMARY KEY,
+    name TEXT NOT NULL UNIQUE,
+    description TEXT
+);
+```
+
+---
+
+## 🔄 Relationships
 
 ![Music Library ER Diagram](https://github.com/user-attachments/assets/27dbd10f-caa9-4866-bf5a-e2e5f0535b2d)
 
-**As detailed by the diagram:**
+### Key Relationships
 
-* One user can create 0 to many playlists. A playlist is created by one and only one user.
-* A user can favourite 0 to many songs through the user_songs junction table.
-* A song can be included in 0 to many playlists through the playlist_songs junction table.
-* A song can be performed by 1 to many artists through the song_artists junction table.
-* A song belongs to 0 or 1 album (singles might not be part of an album).
-* A song can have 1 to many genres through the song_genres junction table.
-* An album contains 1 to many songs.
+- **User ↔ Playlists**: One-to-many (A user can create multiple playlists)
+- **User ↔ Songs**: Many-to-many via user_songs (Favoriting mechanism)
+- **Songs ↔ Artists**: Many-to-many via song_artists (Supports multiple artists per song)
+- **Songs ↔ Albums**: Many-to-one (Songs belong to at most one album)
+- **Songs ↔ Genres**: Many-to-many via song_genres (Multiple genre classification)
+- **Songs ↔ Playlists**: Many-to-many via playlist_songs (Songs can appear in multiple playlists)
 
-## Optimizations
+---
 
-**Indexes:**
+## 🚀 Implementation Details
 
-- Song title and artist name (for fast search)
-- User email (for quick login)
-- Album release date (for chronological sorting)
-- Genre name (for filtering)
-- Playlist creation date (for recent playlists)
+### Performance Optimizations
 
+#### Strategic Indexes
 
-**Views:**
+```sql
+-- Fast search functionality
+CREATE INDEX idx_song_title ON songs(title);
+CREATE INDEX idx_artist_name ON artists(name);
 
-- SongDetails: Combines song info with artist and album details
-- PlaylistContents: Shows all songs in each playlist with details
-- UserLibrary: Displays user's favorited songs with full details
-- PopularSongs: Aggregates song appearance in playlists
+-- Quick authentication
+CREATE INDEX idx_user_email ON users(email);
 
-## Limitations
+-- Efficient sorting and filtering
+CREATE INDEX idx_album_release ON albums(release_date);
+CREATE INDEX idx_genre_name ON genres(name);
+CREATE INDEX idx_playlist_created ON playlists(created_at);
+```
 
-**Technical Limitations:**
+#### Optimized Views
 
-- Cannot store actual audio files
-- No support for variable artist roles (e.g., producer vs. featured artist)
-- Limited handling of classical music (composer, conductor, orchestra)
-- No version control for playlist changes
-- Cannot represent complex album relationships (remasters, compilations)
+```sql
+-- Comprehensive song details
+CREATE VIEW SongDetails AS
+SELECT s.song_id, s.title, s.duration_seconds, s.release_date, s.explicit,
+       a.name AS artist_name, al.title AS album_title
+FROM songs s
+JOIN song_artists sa ON s.song_id = sa.song_id
+JOIN artists a ON sa.artist_id = a.artist_id
+LEFT JOIN albums al ON s.album_id = al.album_id;
 
+-- Complete playlist contents
+CREATE VIEW PlaylistContents AS
+SELECT p.playlist_id, p.name AS playlist_name, s.song_id, 
+       s.title AS song_title, ps.position, ps.added_at
+FROM playlists p
+JOIN playlist_songs ps ON p.playlist_id = ps.playlist_id
+JOIN songs s ON ps.song_id = s.song_id
+ORDER BY p.playlist_id, ps.position;
+```
 
-**Data Model Limitations:**
+---
 
-- Single primary genre per song
-- No support for seasonal/temporary playlists
-- Cannot track listening progress within songs
-- No representation of music videos or other media
-- Limited support for different versions of same song
-- No handling of regional variations in song availability
+## 💡 Use Cases
 
+### Personal Music Organization
+
+- Catalog personal music collections
+- Create themed playlists for different occasions
+- Track favorite songs and artists
+- Monitor listening preferences over time
+
+### Music Analysis
+
+- Analyze distribution of genres in a collection
+- Track listening trends by time period
+- Identify most prolific artists in specific genres
+- Study album completeness in a collection
+
+### Content Management
+
+- Maintain clean separation between explicit and non-explicit content
+- Organize music by release chronology
+- Create specialized collections (e.g., holiday music, workout playlists)
+- Filter content by various metadata attributes
+
+---
+
+## ⚠️ Limitations
+
+### Technical Constraints
+
+- No audio file storage capabilities
+- Limited representation of artist roles (primary artist, featured artist, producer)
+- Cannot handle classical music complexity (composers, conductors, orchestras)
+- No version control for playlist modifications
+- Limited representation of compilation relationships
+
+### Data Model Constraints
+
+- Simplified genre relationships
+- No support for temporary/seasonal playlists
+- Cannot track partial listening within tracks
+- No representation for music videos or visual media
+- Limited support for different versions of the same song
+- No regional availability tracking
+
+---
+
+## 🔮 Future Development
+
+Potential enhancements include:
+
+- Advanced artist role classification
+- Support for classical music compositions
+- Version history for playlists
+- Integration points for audio streaming services
+- Extended metadata for musicological analysis
+- User collaboration features
+- Smart playlist generation based on listening patterns
+- Rating system for songs and albums
+
+---
+
+## 📝 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+---
+
+*Developed as a personal project to demonstrate advanced SQL database design and implementation.*
