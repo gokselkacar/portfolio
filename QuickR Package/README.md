@@ -6,7 +6,7 @@
 
 ## 📊 Overview
 
-DataSwift-R (formerly QuickR) is a powerful R utility package designed to streamline data analysis workflows for researchers, data scientists, and analysts. This package addresses common challenges in data preparation and exploration by providing intuitive, efficient functions for data cleaning, outlier detection, and visualization.
+DataSwift-R is a powerful R utility package designed to streamline data analysis workflows for researchers, data scientists, and analysts. This package addresses common challenges in data preparation and exploration by providing intuitive, efficient functions for data cleaning, outlier detection, and visualization.
 
 By automating routine tasks in the data analysis pipeline, DataSwift-R allows users to spend less time on data preparation and more time extracting meaningful insights from their data.
 
