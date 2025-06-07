@@ -6,4 +6,3 @@ Description: A collection of utility functions to streamline common
 Version: 1.0.0
 Authors@R: person("Goksel", "Kacaroglu", email = "goksel.kacar@hotmai.com", role = c("aut", "cre", "cph"))
 License: MIT + file LICENSE
-Video:
