@@ -1,6 +1,6 @@
 # START Jobs - Career Readiness Events Platform
 
-Private product case study for an event and registration platform built for START Canada.
+Live event and registration platform built for START Canada.
 
 ## Summary
 
@@ -30,6 +30,6 @@ START Jobs - Career Readiness Events Platform is a web application for managing 
 - Admin event management with draft states, attendee views, and capacity handling.
 - Deployment scripts and environment separation for staging and production.
 
-## Note
+## Repository Note
 
-The source code for this project is maintained in a private repository. This page is shared for portfolio and case-study purposes only.
+The source code for this product is maintained in a private repository. This page is a public product summary.

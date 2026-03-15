@@ -2,9 +2,9 @@
 
 This repository collects selected technical work across data, product, and full-stack application development.
 
-## Selected Private Product Work
+## Selected Product Work
 
-These case studies describe products built in private repositories. Public source code is not included.
+These pages describe real products built in private repositories. Public source code is not included.
 
 - [START Canada Marketing Site](./case-studies/start-canada-marketing-site.md) | Next.js, TypeScript, TailwindCSS, Zod, Playwright, Docker
 - [START Jobs - Career Readiness Events Platform](./case-studies/start-jobs-career-readiness-events-platform.md) | PHP, JavaScript, MySQL, TailwindCSS, Apache

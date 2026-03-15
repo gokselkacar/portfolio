@@ -1,6 +1,6 @@
 # START Canada Marketing Site
 
-Private product case study for a production-ready marketing website built for START Canada.
+Production marketing website for START Canada.
 
 ## Summary
 
@@ -31,6 +31,6 @@ START Canada Marketing Site is a Next.js platform designed to present employabil
 - File-based content workflows for blog and gallery management.
 - Production-oriented deployment setup with Docker and Nginx support.
 
-## Note
+## Repository Note
 
-The source code for this project is maintained in a private repository. This page is shared for portfolio and case-study purposes only.
+The source code for this product is maintained in a private repository. This page is a public product summary.

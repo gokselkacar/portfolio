@@ -1,6 +1,6 @@
 # Start Yachts - Boat Marketplace
 
-Private product case study for a web platform and supporting data pipeline built for Start Yachts.
+Boat marketplace product with a web platform and supporting data pipeline.
 
 ## Summary
 
@@ -27,6 +27,6 @@ Start Yachts - Boat Marketplace combines scraping workflows, a Next.js frontend,
 - Serverless backend services alongside a modern web frontend.
 - Operational documentation and project playbooks supporting ongoing delivery.
 
-## Note
+## Repository Note
 
-The source code for this project is maintained in a private repository. This page is shared for portfolio and case-study purposes only.
+The source code for this product is maintained in a private repository. This page is a public product summary.

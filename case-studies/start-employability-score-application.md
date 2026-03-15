@@ -1,6 +1,6 @@
 # START Employability Score Application
 
-Private product case study for a career preparation application delivered across mobile and web.
+Career preparation product delivered across mobile and web.
 
 ## Summary
 
@@ -27,6 +27,6 @@ START Employability Score Application is a cross-platform employability testing 
 - Shared product logic and aligned user experience across clients.
 - Career assessment workflow focused on employability testing.
 
-## Note
+## Repository Note
 
-The source code for this project is maintained in a private repository. This page is shared for portfolio and case-study purposes only.
+The source code for this product is maintained in a private repository. This page is a public product summary.
