@@ -1,15 +1,8 @@
-# My Portfolio Projects
+# Portfolio
 
-This repository collects selected technical work across data, product, and full-stack application development.
+This repository collects public technical projects across data, analytics, and software development.
 
-## Selected Products
-
-These pages describe real products built in private repositories. Public source code is not included.
-
-- [START Canada Marketing Site](./products/start-canada-marketing-site.md) | Next.js marketing website | Next.js, TypeScript, TailwindCSS, Zod, Playwright, Docker
-- [START Jobs - Career Readiness Events Platform](./products/start-jobs-career-readiness-events-platform.md) | bootcamps and workshop events platform | PHP, JavaScript, MySQL, TailwindCSS, Apache
-- [START Employability Score Application](./products/start-employability-score-application.md) | mobile and web employability testing app | React Native, Expo, Next.js, React, AWS
-- [Start Yachts - Boat Marketplace](./products/start-yachts-project.md) | boat marketplace platform | Next.js, AWS Lambda, AWS CDK, scraping pipelines
+Shipped company products are presented separately in [selected-products](https://github.com/gokselkacar/selected-products).
 
 ## Public Portfolio Projects
 
