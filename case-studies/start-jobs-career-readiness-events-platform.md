@@ -1,0 +1,35 @@
+# START Jobs - Career Readiness Events Platform
+
+Private product case study for an event and registration platform built for START Canada.
+
+## Summary
+
+START Jobs - Career Readiness Events Platform is a web application for managing career readiness bootcamps, webinars, and workshops, including registration, authentication, and email confirmations.
+
+## My Contribution
+
+- Developed and maintained the event experience across frontend and backend flows.
+- Supported event registration, authentication, confirmation emails, and user account features.
+- Helped organize admin workflows for event creation, editing, attendance management, and mentor submissions.
+- Worked on deployment and operational tooling for staging and production environments.
+
+## Stack
+
+- PHP
+- Vanilla JavaScript
+- HTML
+- TailwindCSS
+- MySQL / MariaDB
+- Apache
+- PHPMailer
+
+## Highlights
+
+- Event browsing, registration, and email confirmation workflows.
+- User authentication, password reset, newsletter subscription, and resume upload support.
+- Admin event management with draft states, attendee views, and capacity handling.
+- Deployment scripts and environment separation for staging and production.
+
+## Note
+
+The source code for this project is maintained in a private repository. This page is shared for portfolio and case-study purposes only.
