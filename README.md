@@ -2,14 +2,14 @@
 
 This repository collects selected technical work across data, product, and full-stack application development.
 
-## Selected Product Work
+## Selected Products
 
 These pages describe real products built in private repositories. Public source code is not included.
 
-- [START Canada Marketing Site](./case-studies/start-canada-marketing-site.md) | Next.js marketing website | Next.js, TypeScript, TailwindCSS, Zod, Playwright, Docker
-- [START Jobs - Career Readiness Events Platform](./case-studies/start-jobs-career-readiness-events-platform.md) | bootcamps and workshop events platform | PHP, JavaScript, MySQL, TailwindCSS, Apache
-- [START Employability Score Application](./case-studies/start-employability-score-application.md) | mobile and web employability testing app | React Native, Expo, Next.js, React, AWS
-- [Start Yachts - Boat Marketplace](./case-studies/start-yachts-project.md) | boat marketplace platform | Next.js, AWS Lambda, AWS CDK, scraping pipelines
+- [START Canada Marketing Site](./products/start-canada-marketing-site.md) | Next.js marketing website | Next.js, TypeScript, TailwindCSS, Zod, Playwright, Docker
+- [START Jobs - Career Readiness Events Platform](./products/start-jobs-career-readiness-events-platform.md) | bootcamps and workshop events platform | PHP, JavaScript, MySQL, TailwindCSS, Apache
+- [START Employability Score Application](./products/start-employability-score-application.md) | mobile and web employability testing app | React Native, Expo, Next.js, React, AWS
+- [Start Yachts - Boat Marketplace](./products/start-yachts-project.md) | boat marketplace platform | Next.js, AWS Lambda, AWS CDK, scraping pipelines
 
 ## Public Portfolio Projects
 
