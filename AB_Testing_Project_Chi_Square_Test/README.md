@@ -1,25 +1,17 @@
-
 ### A/B Testing - Comparison of Button Performances on the Montana State University Library Website
 
-A/B testing is a technique used to determine which version of a product, method, or service performs better by comparing two versions.
+Independent portfolio analysis of existing Montana State University Library navigation-test data. The project compares click-through rates for five button labels using chi-square tests and develops a follow-up UX recommendation.
 
-It is commonly used to improve website design, app design, advertising, pricing, and other aspects of user experience.
-
-The primary objective of comparing two groups is to test whether any differences observed are due to chance. 
+Hypothesis tests assess the evidence against a specified null model under their assumptions. A non-significant result does not establish equal performance or prove that an observed difference is solely due to chance.
 
 ______________________________ 
 
 
 ### 1. BUSINESS PROBLEM / PROJECT OBJECTIVE
 
-Montana State University Library has a website that students use to find books and articles.
+The existing dataset compares the original Interact label with four alternatives: Connect, Learn, Help and Services. Performance is measured using click-through rate, calculated as button clicks divided by page visits.
 
-Website Analytics indicate that the "Interact" button has, ironically, almost no interactions. Performance is measured using the click-through rate (CTR).
-
-The main purpose of this project is to conduct an A/B Test to test the CTR of different texts on the "Interact" button on the Montana State University website.
-
-The website team selected 4 different new versions/texts to test against the "Interact" button: Connect, Learn, Help, Services.
-
+This case study reports an independent analysis and a proposed follow-up. It does not document a university commission, an implementation by me or a measured uplift from my work.
 
 <img width="1000" alt="Screen Shot 2023-04-22 at 6 42 57 PM" src="https://user-images.githubusercontent.com/90986708/233796469-6bb38ade-83e8-4915-ae69-92efefd4a713.png">
 
@@ -36,23 +28,28 @@ ______________________________
 
 ### 3. PROJECT RESULTS
 
-Based on hypothesis tests, the Services and Connect buttons showed statistically significant performance differences compared to the other 3 buttons.
+The saved [notebook](./AB_Testing_Project_Chi_Square_Test.ipynb) contains the following counts and observed click-through rates:
 
-However, there is no statistically significant difference in conversion between the Services and Connect buttons.
-(In other words, no significant performance difference was observed between these 2 buttons. The differences observed are due to chance.)
+| Label | Button clicks | Page visits | Observed CTR |
+| --- | ---: | ---: | ---: |
+| Interact | 42 | 10,283 | 0.4084% |
+| Help | 38 | 3,180 | 1.1950% |
+| Services | 45 | 2,064 | 2.1802% |
+| Connect | 53 | 2,742 | 1.9329% |
+| Learn | 21 | 2,747 | 0.7645% |
+
+The overall five-version chi-square test returned p = 4.8523e-20, providing evidence that the click-through rates differ across versions under the test assumptions. This overall result does not establish which individual pairs differ.
+
+Services and Connect have the highest observed CTRs. Their uncorrected chi-square comparison returned p = 0.54815 at alpha = 0.05. It did not detect a statistically significant difference between those two labels. This does not establish equal CTRs or prove that the observed gap is solely due to chance.
+
+The notebook narrows the candidates through repeated, data-dependent elimination. Treat that selection as exploratory; it does not demonstrate that Services and Connect each significantly outperform every other label in a planned, multiplicity-adjusted pairwise analysis.
 
 __________________________________
 
 #### Recommendations:
 
-- The click-through rate (CTR) for Services and Connect is better than the other buttons (and the click-through rate for the Services button is higher).
-- However, the likelihood of getting clicks for these 2 versions is equal, and the observed differences are due to chance. We can focus only on these two versions going forward.
-  
-It is strongly recommended to change the library's homepage and present the design with the "Services" button for the following reasons:
+- Shortlist Services and Connect for a focused follow-up comparison. Services has the higher observed CTR in this dataset, but the existing comparison does not establish it as superior to Connect.
+- Define the primary metric, a practically meaningful effect, sample size and stopping rule before collecting new data. Report effect sizes and confidence intervals, and account for multiple comparisons when testing several labels.
+- Check task completion and user expectations alongside clicks. Claims about homepage-return rates or student preferences need separate supporting evidence; they are not established by the inspected CTR calculations.
 
-- Services demonstrate the best click-through rate among all options.
-- In the Services version, the Homepage-return rate is lower, indicating better information delivery to desired users.
-- Students have expressed a preference for the Services version over Connect.
-
-
-
+These values reconcile the README with the notebook's saved counts and outputs. The original CSV files are not included in this repository, so this documentation correction does not reproduce the original data collection or establish the experimental assignment procedure. The notebook code and narrative remain unchanged.
